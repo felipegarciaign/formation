@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f6fa">
+  <title>Convertisseur de devises</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+      color: #1f2937;
+      background: #f3f6fa;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      max-width: 940px;
+      margin: 0 auto;
+      padding: 36px 20px 52px;
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      color: #163a5f;
+      font-size: clamp(2rem, 5vw, 2.7rem);
+      text-align: center;
+    }
+
+    h2 {
+      color: #163a5f;
+      font-size: 1.3rem;
+    }
+
+    .intro {
+      margin: 0 auto 26px;
+      max-width: 650px;
+      color: #526174;
+      text-align: center;
+    }
+
+    .card {
+      margin: 18px 0;
+      padding: 24px;
+      border: 1px solid #e1e8f0;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 5px 18px #163a5f0c;
+    }
+
+    .converter {
+      border-top: 5px solid #2563eb;
+    }
+
+    .converter h2 {
+      margin-bottom: 4px;
+    }
+
+    .subheading {
+      margin-bottom: 22px;
+      color: #64748b;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: end;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #344256;
+      font-size: .92rem;
+      font-weight: 700;
+    }
+
+    input, select, button {
+      min-height: 48px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      color: #1f2937;
+      background: #fff;
+    }
+
+    input:focus, select:focus, button:focus-visible {
+      outline: 3px solid #93c5fd;
+      outline-offset: 2px;
+    }
+
+    .swap {
+      width: 48px;
+      padding: 0;
+      color: #163a5f;
+      background: #eff6ff;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .convert {
+      min-width: 150px;
+      padding: 10px 20px;
+      border-color: #2563eb;
+      color: #fff;
+      background: #2563eb;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: .65;
+    }
+
+    .status {
+      margin: 0;
+      color: #526174;
+      font-size: .92rem;
+    }
+
+    .status.error {
+      color: #b42318;
+    }
+
+    .result {
+      margin-top: 22px;
+      padding: 20px;
+      border-radius: 10px;
+      background: #eff6ff;
+    }
+
+    .result[hidden] {
+      display: none;
+    }
+
+    .result-label {
+      margin-bottom: 3px;
+      color: #475569;
+    }
+
+    .result-value {
+      margin-bottom: 4px;
+      color: #163a5f;
+      font-size: clamp(1.8rem, 6vw, 2.5rem);
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .rate-details {
+      margin: 0;
+      color: #526174;
+      font-size: .9rem;
+    }
+
+    .rule-list, .question-list {
+      margin-bottom: 0;
+      padding-left: 22px;
+    }
+
+    .rule-list li, .question-list li {
+      margin: 9px 0;
+    }
+
+    .examples {
+      border-left: 5px solid #e6a23c;
+      background: #fffaf0;
+    }
+
+    .examples h2 {
+      color: #925b10;
+    }
+
+    .example {
+      margin: 12px 0 0;
+    }
+
+    .decisions {
+      border-left: 5px solid #16a085;
+    }
+
+    .decisions h2 {
+      color: #087f6b;
+    }
+
+    .source {
+      margin: 18px 0 0;
+      color: #64748b;
+      font-size: .85rem;
+    }
+
+    @media (max-width: 680px) {
+      body {
+        padding: 24px 14px 36px;
+      }
+
+      .card {
+        padding: 19px;
+      }
+
+      .fields {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      }
+
+      .amount-field {
+        grid-column: 1 / -1;
+      }
+
+      .swap {
+        width: 44px;
+      }
+
+      .actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Convertisseur de devises</h1>
+    <p class="intro">Saisissez un montant, choisissez les devises et obtenez une conversion avec un taux de change actualisé.</p>
+  </header>
+
+  <main>
+    <section class="card converter" aria-labelledby="converter-title">
+      <h2 id="converter-title">Besoin — Convertir un montant</h2>
+      <p class="subheading">Choisissez une devise de départ et une devise d’arrivée.</p>
+
+      <form id="converter-form" novalidate>
+        <div class="fields">
+          <div class="amount-field">
+            <label for="amount">Montant</label>
+            <input id="amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex. : 100 ou 100,50" aria-describedby="amount-help" required>
+          </div>
+
+          <div>
+            <label for="from-currency">De</label>
+            <select id="from-currency" name="fromCurrency" disabled required>
+              <option value="">Chargement…</option>
+            </select>
+          </div>
+
+          <button class="swap" id="swap-currencies" type="button" aria-label="Inverser les devises" title="Inverser les devises" disabled>⇄</button>
+
+          <div>
+            <label for="to-currency">Vers</label>
+            <select id="to-currency" name="toCurrency" disabled required>
+              <option value="">Chargement…</option>
+            </select>
+          </div>
+        </div>
+
+        <p id="amount-help" class="source">Les nombres positifs ou nuls sont acceptés ; la virgule ou le point servent de séparateur décimal, et les espaces peuvent séparer les milliers.</p>
+
+        <div class="actions">
+          <button class="convert" id="convert-button" type="submit" disabled>Convertir</button>
+          <p class="status" id="status" role="status" aria-live="polite">Chargement de la liste des devises…</p>
+        </div>
+      </form>
+
+      <section class="result" id="result" aria-live="polite" aria-atomic="true" hidden>
+        <p class="result-label" id="result-label">Montant converti</p>
+        <p class="result-value" id="result-value"></p>
+        <p class="rate-details" id="rate-details"></p>
+      </section>
+    </section>
+
+    <section class="card" aria-labelledby="rules-title">
+      <h2 id="rules-title">Règles appliquées</h2>
+      <ul class="rule-list">
+        <li>Le montant, la devise de départ et la devise d’arrivée doivent être renseignés.</li>
+        <li>La conversion utilise le taux fourni par le service de change ; le taux et sa date sont affichés avec le résultat.</li>
+        <li>Si les deux devises sont identiques, le montant reste inchangé et aucun taux n’est nécessaire.</li>
+        <li>Le résultat est arrondi et affiché avec deux décimales.</li>
+        <li>Un montant invalide ou un taux indisponible entraîne un message d’erreur explicite.</li>
+      </ul>
+    </section>
+
+    <section class="card examples" aria-labelledby="examples-title">
+      <h2 id="examples-title">Exemples</h2>
+      <p class="example"><strong>Conversion :</strong> avec un taux d’exemple de 1 EUR = 1,08 USD, 100 EUR donnent 108,00 USD. Le taux de l’application est récupéré en direct et peut donc être différent.</p>
+      <p class="example"><strong>Même devise :</strong> 25 EUR convertis en EUR donnent 25,00 EUR.</p>
+      <p class="example"><strong>Saisie invalide :</strong> une saisie telle que « abc » affiche un message demandant un montant valide.</p>
+    </section>
+
+    <section class="card decisions" aria-labelledby="decisions-title">
+      <h2 id="decisions-title">Questions précisées pour cette version</h2>
+      <ul class="question-list">
+        <li><strong>Quelles devises ?</strong> Toutes celles proposées par le service de taux.</li>
+        <li><strong>Quelle source et quelle fréquence ?</strong> L’API Frankfurter, dont les taux sont actualisés quotidiennement.</li>
+        <li><strong>Faut-il afficher la date du taux ?</strong> Oui, elle apparaît avec le résultat.</li>
+        <li><strong>Combien de décimales ?</strong> Deux, avec l’arrondi usuel.</li>
+        <li><strong>Les montants négatifs sont-ils autorisés ?</strong> Non ; zéro est accepté.</li>
+        <li><strong>Que faire si le taux est indisponible ?</strong> Afficher une erreur et ne pas présenter de résultat de conversion.</li>
+        <li><strong>Quels formats de saisie ?</strong> La virgule ou le point sont acceptés comme séparateur décimal ; les milliers peuvent être séparés par des espaces.</li>
+      </ul>
+      <p class="source">Les taux sont fournis par <a href="https://frankfurter.dev/" target="_blank" rel="noreferrer">Frankfurter</a>. Une connexion Internet est nécessaire pour charger les devises et les taux.</p>
+    </section>
+  </main>
+
+  <script>
+    const apiBase = "https://api.frankfurter.dev/v2";
+    const form = document.querySelector("#converter-form");
+    const amountInput = document.querySelector("#amount");
+    const fromSelect = document.querySelector("#from-currency");
+    const toSelect = document.querySelector("#to-currency");
+    const swapButton = document.querySelector("#swap-currencies");
+    const convertButton = document.querySelector("#convert-button");
+    const status = document.querySelector("#status");
+    const result = document.querySelector("#result");
+    const resultLabel = document.querySelector("#result-label");
+    const resultValue = document.querySelector("#result-value");
+    const rateDetails = document.querySelector("#rate-details");
+
+    function setStatus(message, isError = false) {
+      status.textContent = message;
+      status.classList.toggle("error", isError);
+      status.setAttribute("role", isError ? "alert" : "status");
+    }
+
+    function formatCurrency(value, currency) {
+      return new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    }
+
+    function parseAmount(rawValue) {
+      const trimmedValue = rawValue.trim();
+      const validAmount = /^(?:\d+|\d{1,3}(?:[ \u00a0\u202f]\d{3})+)(?:[.,]\d*)?$|^[.,]\d+$/.test(trimmedValue);
+      if (!validAmount) {
+        return null;
+      }
+
+      const compactValue = trimmedValue.replace(/[\s\u00a0\u202f]/g, "");
+      const amount = Number(compactValue.replace(",", "."));
+      return Number.isFinite(amount) ? amount : null;
+    }
+
+    function populateCurrencies(currencies) {
+      const sortedCurrencies = currencies
+        .filter((currency) => currency.iso_code && currency.name)
+        .sort((a, b) => a.iso_code.localeCompare(b.iso_code));
+
+      for (const select of [fromSelect, toSelect]) {
+        select.replaceChildren();
+        for (const currency of sortedCurrencies) {
+          const option = document.createElement("option");
+          option.value = currency.iso_code;
+          option.textContent = `${currency.iso_code} — ${currency.name}`;
+          select.append(option);
+        }
+        select.disabled = false;
+      }
+
+      fromSelect.value = "EUR";
+      toSelect.value = "USD";
+      swapButton.disabled = false;
+      convertButton.disabled = false;
+      setStatus("Prêt à convertir.");
+    }
+
+    async function loadCurrencies() {
+      try {
+        const response = await fetch(`${apiBase}/currencies`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const currencies = await response.json();
+        if (!Array.isArray(currencies) || currencies.length === 0) {
+          throw new Error("La liste des devises reçue est invalide.");
+        }
+
+        populateCurrencies(currencies);
+      } catch (error) {
+        fromSelect.replaceChildren();
+        toSelect.replaceChildren();
+        setStatus("Impossible de charger les devises. Vérifiez votre connexion puis rechargez la page.", true);
+      }
+    }
+
+    function formatRateDate(date) {
+      const parsedDate = new Date(`${date}T00:00:00Z`);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return date;
+      }
+      return new Intl.DateTimeFormat("fr-FR", {
+        dateStyle: "long",
+        timeZone: "UTC"
+      }).format(parsedDate);
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      result.hidden = true;
+
+      const rawAmount = amountInput.value;
+      const amount = parseAmount(rawAmount);
+      if (amount === null) {
+        setStatus("Saisissez un montant valide, en utilisant la virgule ou le point pour les décimales.", true);
+        amountInput.focus();
+        return;
+      }
+
+      const fromCurrency = fromSelect.value;
+      const toCurrency = toSelect.value;
+      if (!fromCurrency || !toCurrency) {
+        setStatus("Sélectionnez une devise de départ et une devise d’arrivée.", true);
+        return;
+      }
+
+      if (fromCurrency === toCurrency) {
+        resultLabel.textContent = "Montant converti — devises identiques";
+        resultValue.textContent = formatCurrency(amount, toCurrency);
+        rateDetails.textContent = "Le montant est inchangé ; aucun taux de change n’est nécessaire.";
+        result.hidden = false;
+        setStatus("Conversion terminée.");
+        return;
+      }
+
+      convertButton.disabled = true;
+      setStatus("Récupération du taux de change…");
+      try {
+        const response = await fetch(
+          `${apiBase}/rate/${encodeURIComponent(fromCurrency)}/${encodeURIComponent(toCurrency)}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const rateData = await response.json();
+        if (
+          rateData.base !== fromCurrency ||
+          rateData.quote !== toCurrency ||
+          !Number.isFinite(rateData.rate) ||
+          rateData.rate <= 0 ||
+          typeof rateData.date !== "string"
+        ) {
+          throw new Error("Le taux reçu est invalide.");
+        }
+
+        const convertedAmount = amount * rateData.rate;
+        if (!Number.isFinite(convertedAmount)) {
+          throw new Error("Le montant converti dépasse la valeur prise en charge.");
+        }
+
+        resultLabel.textContent = "Montant converti";
+        resultValue.textContent = formatCurrency(convertedAmount, toCurrency);
+        rateDetails.textContent = `1 ${fromCurrency} = ${new Intl.NumberFormat("fr-FR", {
+          maximumFractionDigits: 6
+        }).format(rateData.rate)} ${toCurrency} — taux du ${formatRateDate(rateData.date)}.`;
+        result.hidden = false;
+        setStatus("Conversion terminée.");
+      } catch (error) {
+        setStatus("Conversion impossible : le taux est indisponible ou la devise n’est pas prise en charge. Réessayez plus tard.", true);
+      } finally {
+        convertButton.disabled = false;
+      }
+    });
+
+    swapButton.addEventListener("click", () => {
+      const previousFrom = fromSelect.value;
+      fromSelect.value = toSelect.value;
+      toSelect.value = previousFrom;
+    });
+
+    loadCurrencies();
+  </script>
+</body>
+</html>
